@@ -1,6 +1,5 @@
 from langchain.document_loaders import PyPDFLoader
 from langchain.document_loaders import GCSFileLoader
-from langchain.schema import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 import google.auth
 from google.cloud import storage

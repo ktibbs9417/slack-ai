@@ -1,6 +1,4 @@
-from utils.matching_engine import MatchingEngine
 from utils.matching_engine_utils import MatchingEngineUtils
-import subprocess
 from google.cloud import storage
 import numpy as np
 import uuid

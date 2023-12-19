@@ -1,4 +1,3 @@
-from langchain.chains.conversation.memory import ConversationBufferWindowMemory
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.chains import LLMChain
 from modules.templates import ChatPromptTemplate
@@ -31,9 +30,7 @@ class ChatHandler():
         return user_chain, user_input, history, user_memory, conversation_contexts, context_key
     
     def doc_question_command(body, conversation_contexts):
-        llmlibrary = LLMLibrary()
-        print(body['text'])
-        
+        llmlibrary = LLMLibrary()        
         channel_id = body['channel_id']
         user_id = body['user_id']
         context_key = f"{channel_id}-{user_id}"
@@ -41,11 +38,9 @@ class ChatHandler():
         if context_key not in conversation_contexts:
             conversation_contexts[context_key] = {
                 "memory": ConversationBufferMemory(memory_key="chat_history", output_key="answer", return_messages=True, max_token_limit=1024),
-                "chat_history": "",
+                "history": "",
             }
         user_memory = conversation_contexts[context_key]["memory"]
-        #chat_history = conversation_contexts[context_key]["chat_history"]
-        print (f"conversation_contexts {conversation_contexts}")
         question = body['text']
         conversation = llmlibrary.doc_question(user_memory, prompt)
         #print(f"Conversation: {conversation}")

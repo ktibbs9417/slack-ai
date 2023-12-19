@@ -14,6 +14,7 @@ from dotenv import load_dotenv
 from modules.handlers import ChatHandler
 from modules.templates import ChatPromptTemplate
 from modules.pkl import Pkl
+import time
 
 # Load environment variables from .env file
 load_dotenv('.env')
@@ -44,6 +45,7 @@ def message_handler(message, say, logger):
     user_chain, user_input, history, user_memory, conversation, context_key = ChatHandler.generic_user_message(message, conversation_contexts)   
     output = user_chain.predict(user_input=user_input, history=history, memory=user_memory)
     updated_history = history + f"\nHuman: {user_input}\nAssistant: {output}"
+    print(f"(INFO) Generic output: {output} {time.time()}")
     conversation[context_key]["history"] = updated_history
     conversation[context_key]["memory"] = user_memory
     say(output)
@@ -62,9 +64,10 @@ def handle_doc_question_command(ack, body, say):
     ack()
     print(body)
     say(f"🤨 {body['text']}")
-    question, conversation = ChatHandler.doc_question_command(body, conversation_contexts)
+    question, conversation  = ChatHandler.doc_question_command(body, conversation_contexts)
     response = conversation({'question': question})
-    print(f"Response: {response['answer']}")
+    print(f"(INFO) Doc Question Response: {response} {time.time()}")
+    print(f"(INFO) Doc Question Response answer: {response['answer']} {time.time()}")
 
     say(f"🤖 {response['answer']}")
     #conversation = llmlibrary.ask()

@@ -1,18 +1,8 @@
-import time
 from modules.vector_search import VectorSearch
-from langchain.memory import ConversationBufferMemory
-from langchain.chains import ConversationalRetrievalChain
-from langchain.prompts import (
-    ChatPromptTemplate,
-    MessagesPlaceholder,
-    SystemMessagePromptTemplate,
-    HumanMessagePromptTemplate,
-)
 import os
 from langchain.embeddings.cohere import CohereEmbeddings
 from utils.matching_engine import MatchingEngine
 from dotenv import load_dotenv
-from langchain.vectorstores import AtlasDB
 
 
 class VectorStore:
