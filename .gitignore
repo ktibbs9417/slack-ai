@@ -1,0 +1,8 @@
+__pycache__
+pdfs
+vectordb.json
+nomic.py
+.DS_Store
+vectordb
+/chromadb
+.env
