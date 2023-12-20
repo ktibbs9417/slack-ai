@@ -42,6 +42,22 @@ class ChatHandler():
             }
         user_memory = conversation_contexts[context_key]["memory"]
         question = body['text']
-        conversation = llmlibrary.doc_question(user_memory, prompt)
+        conversation = llmlibrary.doc_question(user_memory, prompt, question)
         #print(f"Conversation: {conversation}")
         return question, conversation
+    
+    def terraform_question_command(body, question, conversation_contexts):
+        llmlibrary = LLMLibrary()
+        channel_id = body['channel_id']
+        user_id = body['user_id']
+        context_key = f"{channel_id}-{user_id}"
+        prompt = ChatPromptTemplate.terraform_prompt_template()
+        if context_key not in conversation_contexts:
+            conversation_contexts[context_key] = {
+                "memory": ConversationBufferMemory(memory_key="chat_history", output_key="answer", return_messages=True, max_token_limit=1024),
+                "history": "",
+            }
+        user_memory = conversation_contexts[context_key]["memory"]
+        history = conversation_contexts[context_key]["history"]
+        user_chain = LLMLibrary.terraform_question(user_memory, prompt)
+        return user_chain, history, user_memory, conversation_contexts, context_key

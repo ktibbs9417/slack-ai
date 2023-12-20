@@ -6,3 +6,4 @@ nomic.py
 vectordb
 /chromadb
 .env
+tf_state.json

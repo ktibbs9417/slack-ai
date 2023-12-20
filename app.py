@@ -14,6 +14,7 @@ from dotenv import load_dotenv
 from modules.handlers import ChatHandler
 from modules.templates import ChatPromptTemplate
 from modules.pkl import Pkl
+from modules.tf_reader_utility import TerraformReader
 import time
 
 # Load environment variables from .env file
@@ -26,6 +27,7 @@ embedding_function = CohereEmbeddings(model="embed-english-v3.0", cohere_api_key
 credentials, project = google.auth.default()
 aiplatform.init(project=project, location="us-central1")
 pkl = Pkl()
+tf_reader = TerraformReader()
 
 #Langchain implementation
 
@@ -43,20 +45,20 @@ def message_handler(message, say, logger):
     print(message)
 
     user_chain, user_input, history, user_memory, conversation, context_key = ChatHandler.generic_user_message(message, conversation_contexts)   
-    output = user_chain.predict(user_input=user_input, history=history, memory=user_memory)
-    updated_history = history + f"\nHuman: {user_input}\nAssistant: {output}"
-    print(f"(INFO) Generic output: {output} {time.time()}")
+    response = user_chain.predict(user_input=user_input, history=history, memory=user_memory)
+    updated_history = history + f"\nHuman: {user_input}\nAssistant: {response}"
+    print(f"(INFO) Generic output: {response} {time.time()}")
     conversation[context_key]["history"] = updated_history
     conversation[context_key]["memory"] = user_memory
-    say(output)
+    say(f"🤖 {response}")
 
 @app.event("app_mention")
-def handle_app_mention_events(body, message, say, logger):
-    print(body)
+def handle_app_mention_events(body, say, logger):
+    print(f"(INFO) App mention: {body} {time.time()}")
     blocks = body['event']['blocks']
     question = blocks[0]['elements'][0]['elements'][1]['text']
     output = conversation_chain.predict(human_input = question)   
-    say(output)
+    say(f"🤖 {output}")
 
 @app.command("/doc_question")
 def handle_doc_question_command(ack, body, say):
@@ -70,8 +72,24 @@ def handle_doc_question_command(ack, body, say):
     print(f"(INFO) Doc Question Response answer: {response['answer']} {time.time()}")
 
     say(f"🤖 {response['answer']}")
-    #conversation = llmlibrary.ask()
-    #response = conversation({'question': question})
+
+@app.command("/terraform")
+def handle_terraform_command(ack, body, say):
+    # Acknowledge the command request
+    ack()
+    say(f"🤨 {body['text']}")
+    text_parts = body['text'].split(' ', 1)
+    question = text_parts[1]
+    print(f"GCS Path: {text_parts[0]}\n")
+    tf_reader.get_tf_state(text_parts[0])
+
+    user_chain, history, user_memory, conversation, context_key = ChatHandler.terraform_question_command(body, text_parts[0], conversation_contexts)   
+    response = user_chain.predict(question=question, history=history)
+    updated_history = history + f"\nHuman: {question}\nAssistant: {response}"
+    print(f"(INFO) Terraform question output: {response} {time.time()}")
+    conversation[context_key]["history"] = updated_history
+    conversation[context_key]["memory"] = user_memory
+    say(f"🤖 {response}")
 
 
 @app.command("/clear_chat")
