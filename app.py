@@ -2,8 +2,6 @@ import os
 import requests
 from slack_bolt import App
 from slack_bolt.adapter.socket_mode import SocketModeHandler
-from langchain.prompts import PromptTemplate
-from langchain.embeddings.cohere import CohereEmbeddings
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.chains.conversation.memory import ConversationBufferWindowMemory
 from langchain.memory import ConversationBufferMemory
@@ -12,19 +10,21 @@ import google.auth
 from google.cloud import storage, aiplatform
 from dotenv import load_dotenv
 from modules.handlers import ChatHandler
-from modules.templates import ChatPromptTemplate
+from modules.templates import SlackPromptTemplate
 from modules.pkl import Pkl
 from modules.tf_reader_utility import TerraformReader
+from dotenv import load_dotenv
 import time
 
 # Load environment variables from .env file
-load_dotenv('.env')
+load_dotenv()
 
 # Initializes your app with your bot token and socket mode handler
+print(f"Initializing Slack App")
 app = App(token=os.environ.get("SLACK_BOT_TOKEN"))
-choere_api_key = os.getenv("COHERE_API_KEY")
-embedding_function = CohereEmbeddings(model="embed-english-v3.0", cohere_api_key=choere_api_key)
-credentials, project = google.auth.default()
+print(f"Initializing Google Auth and Vertex AI")
+credentials = google.auth.default()
+project = os.getenv("PROJECT_ID")
 aiplatform.init(project=project, location="us-central1")
 pkl = Pkl()
 tf_reader = TerraformReader()
@@ -34,11 +34,10 @@ tf_reader = TerraformReader()
 conversation_chain= LLMChain(
             llm=ChatGoogleGenerativeAI(model="gemini-pro",temperature=0.0),
             memory=ConversationBufferWindowMemory(k=2),
-            prompt=ChatPromptTemplate.generic_prompt_template(),
+            prompt=SlackPromptTemplate.generic_prompt_template(),
             verbose=True,
         )
 conversation_contexts = {}
-
 #Message handler for Slack
 @app.message(".*")
 def message_handler(message, say, logger):
@@ -64,12 +63,15 @@ def handle_app_mention_events(body, say, logger):
 def handle_doc_question_command(ack, body, say):
     # Acknowledge the command request
     ack()
-    print(body)
     say(f"🤨 {body['text']}")
-    question, conversation  = ChatHandler.doc_question_command(body, conversation_contexts)
-    response = conversation({'question': question})
-    print(f"(INFO) Doc Question Response: {response} {time.time()}")
-    print(f"(INFO) Doc Question Response answer: {response['answer']} {time.time()}")
+
+    conversation_chain  = ChatHandler.doc_question_command(body)
+
+    response = conversation_chain({'question': body['text']})
+    print(f"(DEBUG) Doc Question Response: {response['chat_history']} {time.time()}\n")
+    print(f"(DEBUG) Doc Question Full Response: {response} {time.time()}\n")
+    print(f"(INFO) User question: {body['text']} {time.time()}\n")
+    print(f"(INFO) Doc Question Response answer: {response['answer']} {time.time()}\n")
 
     say(f"🤖 {response['answer']}")
 
@@ -83,7 +85,7 @@ def handle_terraform_command(ack, body, say):
     print(f"GCS Path: {text_parts[0]}\n")
     tf_reader.get_tf_state(text_parts[0])
 
-    user_chain, history, user_memory, conversation, context_key = ChatHandler.terraform_question_command(body, text_parts[0], conversation_contexts)   
+    user_chain, history, user_memory, conversation, context_key = ChatHandler.terraform_question_command(body, conversation_contexts)   
     response = user_chain.predict(question=question, history=history)
     updated_history = history + f"\nHuman: {question}\nAssistant: {response}"
     print(f"(INFO) Terraform question output: {response} {time.time()}")

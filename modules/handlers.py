@@ -1,6 +1,6 @@
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.chains import LLMChain
-from modules.templates import ChatPromptTemplate
+from modules.templates import SlackPromptTemplate
 from modules.llm_library import LLMLibrary
 from langchain.memory import ConversationBufferMemory
 
@@ -24,34 +24,29 @@ class ChatHandler():
         user_input = message['text']
         user_chain= LLMChain(
                 llm=ChatGoogleGenerativeAI(model="gemini-pro",temperature=0.0),
-                prompt=ChatPromptTemplate.generic_prompt_template(),
+                prompt=SlackPromptTemplate.generic_prompt_template(),
                 verbose=True,
             )          
         return user_chain, user_input, history, user_memory, conversation_contexts, context_key
     
-    def doc_question_command(body, conversation_contexts):
+    def doc_question_command(body):
         llmlibrary = LLMLibrary()        
         channel_id = body['channel_id']
         user_id = body['user_id']
         context_key = f"{channel_id}-{user_id}"
-        prompt = ChatPromptTemplate.doc_question_prompt_template()
-        if context_key not in conversation_contexts:
-            conversation_contexts[context_key] = {
-                "memory": ConversationBufferMemory(memory_key="chat_history", output_key="answer", return_messages=True, max_token_limit=1024),
-                "history": "",
-            }
-        user_memory = conversation_contexts[context_key]["memory"]
+        prompt = SlackPromptTemplate.doc_question_prompt_template()
         question = body['text']
-        conversation = llmlibrary.doc_question(user_memory, prompt, question)
+        print(f"Sending Question to the vectordb: {question}")
+        conversation_chain = llmlibrary.doc_question(prompt)
         #print(f"Conversation: {conversation}")
-        return question, conversation
+        return conversation_chain
     
     def terraform_question_command(body, question, conversation_contexts):
         llmlibrary = LLMLibrary()
         channel_id = body['channel_id']
         user_id = body['user_id']
         context_key = f"{channel_id}-{user_id}"
-        prompt = ChatPromptTemplate.terraform_prompt_template()
+        prompt = SlackPromptTemplate.terraform_prompt_template()
         if context_key not in conversation_contexts:
             conversation_contexts[context_key] = {
                 "memory": ConversationBufferMemory(memory_key="chat_history", output_key="answer", return_messages=True, max_token_limit=1024),

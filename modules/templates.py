@@ -1,7 +1,10 @@
 from langchain.prompts import PromptTemplate
+from langchain.prompts import HumanMessagePromptTemplate
+from langchain.prompts import ChatPromptTemplate
 
 
-class ChatPromptTemplate():
+
+class SlackPromptTemplate():
 
     def generic_prompt_template():
         template = """
@@ -33,16 +36,18 @@ class ChatPromptTemplate():
         )
 
     def doc_question_prompt_template():
-        template = """
-        You are a helpful assistant that has the ability to answer all users questions to the best of your ability in English only.
-        Your answers should come from the context you are provided. Provide an answer with detail and not short answers.
-        You specialize in answering questions about Trace3.
-        
-        Context:
-        {context}
-        User: {question}
-        """
-        return PromptTemplate(
-            input_variables=["question"], 
-            template=template
+        template = ChatPromptTemplate.from_template(
+                '''
+                You are a helpful assistant that has the ability to answer all users questions to the best of your ability.
+                Your answers should come from the context you are provided. Provide an answer with detail and not short answers.
+                Your only response should be in the English langeuage.
+                History:
+                {chat_history}
+                
+                Question: {question}
+
+                Context:
+                {context}
+                '''
         )
+        return template

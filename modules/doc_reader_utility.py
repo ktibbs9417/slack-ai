@@ -15,7 +15,8 @@ import os
 class DocumentReader():
     def __init__(self):
         load_dotenv()
-        self.credentials, self.project = google.auth.default()
+        self.credentials= google.auth.default()
+        self.project = os.getenv("ai-playground-401720")
         # Create a list of all the blobs in the Storage Bucket
         self.GCS_STORAGE_BUCKET = os.getenv("GCS_STORAGE_BUCKET")
         self.bucket = storage.Client().get_bucket(self.GCS_STORAGE_BUCKET)
@@ -45,12 +46,10 @@ class DocumentReader():
                         doc.metadata = {"source": source, "document_name": document_name}
                     # Split the docs
                     text_splitter = RecursiveCharacterTextSplitter(
-                        chunk_size=1000, 
-                        chunk_overlap=200,
-                        separators=["\n\n", "\n", ".", "!", "?", ",", " ", ""],
+                        chunk_size=500, 
+                        chunk_overlap=100,
                         length_function=len,
                         )
-                    #print(f"Loaded Text:  {loaded_texts}\n")
                     doc_splits = text_splitter.split_documents(loaded_docs)
                     for idx, split in enumerate(doc_splits):
                         split.metadata['chunk'] = idx
@@ -67,10 +66,14 @@ class DocumentReader():
             if None not in (docs, blob_name):
                 #print(f"Split Text:  {docs}\n")
                 print(f"Number of Chunks from PDF:  {len(docs)}\n")
+                print(f"Chunk 1:  {docs[0]}\n")
+                print(f"Chunk 2:  {docs[1]}\n")
+                print(f"Chunk 3:  {docs[2]}\n")
+                print(f"Chunk 4:  {docs[3]}\n")
                 # Add the docs to the vectorstore
                 print(f"Successfully loaded {blob_name}")
                 print(f"Vectorizing document {blob_name}")
-                self.vectorstore.use_vector_search(docs, blob_name)
+                self.vectorstore.pinecone_vector(docs, blob_name)
                 
         except Exception as e:
             print(f"An error occurred during document embedding: {e} on file {blob_name}")

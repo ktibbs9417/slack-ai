@@ -3,11 +3,14 @@ import pickle
 from google.cloud import storage
 from modules.empty_pickle import create_pickle
 import os
+from dotenv import load_dotenv
 
 class Pkl():
 
     def __init__(self):
-        self.credentials, self.project = google.auth.default()
+        load_dotenv()
+        self.credentials= google.auth.default()
+        self.project = os.getenv("PROJECT_ID")
         # Create a list of all the blobs in the Storage Bucket
         self.GCS_STORAGE_BUCKET = os.getenv("GCS_STORAGE_BUCKET")
         self.bucket = storage.Client().get_bucket(self.GCS_STORAGE_BUCKET)
