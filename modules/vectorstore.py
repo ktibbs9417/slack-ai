@@ -3,6 +3,7 @@ import os
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain.vectorstores import Pinecone
 import pinecone
+from langchain.embeddings.cohere import CohereEmbeddings
 from dotenv import load_dotenv
 
 
@@ -12,6 +13,9 @@ class VectorStore:
         BASEDIR = os.path.abspath(os.path.dirname("main.py"))
         load_dotenv(os.path.join(BASEDIR, '.env'))
         self.embedding_function = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
+        choere_api_key = os.getenv("COHERE_API_KEY")
+        self.cohere_embedding = CohereEmbeddings(model="embed-english-light-v3.0", cohere_api_key=choere_api_key)
+
         pinecone.init(
             api_key=os.getenv("PINECONE_API_KEY"),  # find at app.pinecone.io
             environment=os.getenv("PINECONE_ENV"),  # next to api key in console
@@ -26,7 +30,7 @@ class VectorStore:
 
             Pinecone.from_documents(
                 documents=doc_splits,
-                embedding=self.embedding_function,
+                embedding=self.cohere_embedding,
                 index_name=self.index_name,
             )
             print(f"Successfully added {blob_name} to Pinecone\n")
@@ -35,4 +39,4 @@ class VectorStore:
 
     # Load the persistent vectordb
     def get_vectordb(self):        
-        return Pinecone.from_existing_index(self.index_name, self.embedding_function)
+        return Pinecone.from_existing_index(self.index_name, self.cohere_embedding)

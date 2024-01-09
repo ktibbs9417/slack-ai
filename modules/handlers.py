@@ -30,14 +30,15 @@ class ChatHandler():
         return user_chain, user_input, history, user_memory, conversation_contexts, context_key
     
     def doc_question_command(body):
-        llmlibrary = LLMLibrary()        
+        llmlibrary = LLMLibrary()       
         channel_id = body['channel_id']
         user_id = body['user_id']
+        user_name = body['user_name']
         context_key = f"{channel_id}-{user_id}"
         prompt = SlackPromptTemplate.doc_question_prompt_template()
         question = body['text']
         print(f"Sending Question to the vectordb: {question}")
-        conversation_chain = llmlibrary.doc_question(prompt)
+        conversation_chain = llmlibrary.doc_question(prompt, user_name)
         return conversation_chain
     
     def terraform_question_command(body, question, conversation_contexts):

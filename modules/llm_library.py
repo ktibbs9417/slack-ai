@@ -1,13 +1,19 @@
 from modules.vector_search import VectorSearch
 from modules.vectorstore import VectorStore
 from langchain.chains import ConversationalRetrievalChain
-import os
 from langchain.chains import LLMChain
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.vectorstores import DocArrayInMemorySearch
 from langchain.memory import VectorStoreRetrieverMemory
 from langchain.memory import ConversationBufferMemory
+from lunary import LunaryCallbackHandler
+import lunary
+from langchain.embeddings.cohere import CohereEmbeddings
+
+from dotenv import load_dotenv
+import os
+
 
 
 from dotenv import load_dotenv
@@ -17,14 +23,21 @@ from dotenv import load_dotenv
 class LLMLibrary:
         
     def __init__(self):
+        load_dotenv()
+        choere_api_key = os.getenv("COHERE_API_KEY")
         self.embedding_function = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
+        self.cohere_embedding = CohereEmbeddings(model="embed-english-light-v3.0", cohere_api_key=choere_api_key)
+
+        
+        self.handler = LunaryCallbackHandler(app_id=os.getenv("LUNARY_APP_ID"))
         self.vectorsearch = VectorSearch()
         self.vectorstore = VectorStore()
 
     
-    def doc_question(self, prompt):
+    def doc_question(self, prompt, user_name):
 
-        llm = ChatGoogleGenerativeAI(model="gemini-pro",temperature=0.5, convert_system_message_to_human=True)
+        llm = ChatGoogleGenerativeAI(model="gemini-pro",temperature=0.5, convert_system_message_to_human=True, callbacks=[self.handler], metadata={"user_id": user_name})
+        lunary.monitor(llm)
         vectordb = self.vectorstore.get_vectordb()
         print(f"Vector DB: {vectordb}\n")
         retriever = vectordb.as_retriever(
@@ -51,7 +64,7 @@ class LLMLibrary:
         global vectorstore
         vectorstore = DocArrayInMemorySearch.from_documents(
             doc_splits, 
-            embedding=self.embedding_function
+            embedding=self.cohere_embedding
         )
         print(f"Vector Store: {vectorstore}\n")
 

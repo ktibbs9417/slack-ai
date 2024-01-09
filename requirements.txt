@@ -22,3 +22,5 @@ langchain-google-genai
 slack-sdk
 slack-bolt
 pinecone-client
+lunary
+simsimd
