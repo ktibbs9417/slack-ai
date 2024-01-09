@@ -16,7 +16,7 @@ class DocumentReader():
     def __init__(self):
         load_dotenv()
         self.credentials= google.auth.default()
-        self.project = os.getenv("ai-playground-401720")
+        self.project = os.getenv("PROJECT_ID")
         # Create a list of all the blobs in the Storage Bucket
         self.GCS_STORAGE_BUCKET = os.getenv("GCS_STORAGE_BUCKET")
         self.bucket = storage.Client().get_bucket(self.GCS_STORAGE_BUCKET)
@@ -66,10 +66,6 @@ class DocumentReader():
             if None not in (docs, blob_name):
                 #print(f"Split Text:  {docs}\n")
                 print(f"Number of Chunks from PDF:  {len(docs)}\n")
-                print(f"Chunk 1:  {docs[0]}\n")
-                print(f"Chunk 2:  {docs[1]}\n")
-                print(f"Chunk 3:  {docs[2]}\n")
-                print(f"Chunk 4:  {docs[3]}\n")
                 # Add the docs to the vectorstore
                 print(f"Successfully loaded {blob_name}")
                 print(f"Vectorizing document {blob_name}")

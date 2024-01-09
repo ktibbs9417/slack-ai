@@ -38,7 +38,6 @@ class ChatHandler():
         question = body['text']
         print(f"Sending Question to the vectordb: {question}")
         conversation_chain = llmlibrary.doc_question(prompt)
-        #print(f"Conversation: {conversation}")
         return conversation_chain
     
     def terraform_question_command(body, question, conversation_contexts):

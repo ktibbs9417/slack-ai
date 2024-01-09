@@ -28,6 +28,7 @@ project = os.getenv("PROJECT_ID")
 aiplatform.init(project=project, location="us-central1")
 pkl = Pkl()
 tf_reader = TerraformReader()
+doc_chain = None
 
 #Langchain implementation
 
@@ -62,12 +63,24 @@ def handle_app_mention_events(body, say, logger):
 @app.command("/doc_question")
 def handle_doc_question_command(ack, body, say):
     # Acknowledge the command request
+    global doc_chain
     ack()
     say(f"🤨 {body['text']}")
 
-    conversation_chain  = ChatHandler.doc_question_command(body)
+    try:
+    # Check if conversation_chain is not already set
+        if doc_chain is None:
+            print("Initializing conversation_chain.")
+            doc_chain = ChatHandler.doc_question_command(body)
+        else:
+            print("doc_chain is already set.")
+    except Exception as e:
+        # Log the specific exception for better debugging
+        print(f"An error occurred: {e}")
+        # Optionally, you can reattempt to set conversation_chain if it's critical
+        doc_chain = ChatHandler.doc_question_command(body)
 
-    response = conversation_chain({'question': body['text']})
+    response = doc_chain({'question': body['text']})
     print(f"(DEBUG) Doc Question Response: {response['chat_history']} {time.time()}\n")
     print(f"(DEBUG) Doc Question Full Response: {response} {time.time()}\n")
     print(f"(INFO) User question: {body['text']} {time.time()}\n")
@@ -109,7 +122,8 @@ def handle_clear_chat_command(ack, body, say):
             "memory": ConversationBufferMemory(memory_key="chat_history", output_key="answer", return_messages=True, max_token_limit=1024),
             "history": ""
         }
-    conversation = None
+    global doc_chain
+    doc_chain = None
     # Send a confirmation message
     say("The chat history has been cleared.")
 

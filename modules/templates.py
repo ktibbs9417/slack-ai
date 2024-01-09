@@ -41,8 +41,6 @@ class SlackPromptTemplate():
                 You are a helpful assistant that has the ability to answer all users questions to the best of your ability.
                 Your answers should come from the context you are provided. Provide an answer with detail and not short answers.
                 Your only response should be in the English langeuage.
-                History:
-                {chat_history}
                 
                 Question: {question}
 

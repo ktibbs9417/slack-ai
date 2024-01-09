@@ -24,12 +24,11 @@ class LLMLibrary:
     
     def doc_question(self, prompt):
 
-        llm = ChatGoogleGenerativeAI(model="gemini-pro",temperature=0.0, convert_system_message_to_human=True)
+        llm = ChatGoogleGenerativeAI(model="gemini-pro",temperature=0.5, convert_system_message_to_human=True)
         vectordb = self.vectorstore.get_vectordb()
         print(f"Vector DB: {vectordb}\n")
         retriever = vectordb.as_retriever(
-                    search_type="similarity_score_threshold",
-                    search_kwargs={'score_threshold': 0.8}
+                    search_type="mmr"
             )
         #print(f"Docs: {docs}\n")
         #print(f"Initiating chat conversation memory\n")
